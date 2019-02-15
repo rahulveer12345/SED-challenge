@@ -1,0 +1,84 @@
+execute 'apt-repo' do
+command 'apt-get -y install apache2'
+end
+
+service 'apache2' do
+action [:start, :enable]
+end
+
+file '/var/www/html/index.html' do
+content '
+<html>
+<head>
+<title>Hello World</title>
+</head>
+<body>
+<h1>Hello World!</h1>
+</body>
+</html>
+'
+end
+
+service 'iptables' do
+action :stop
+end
+
+redirect_host 'www.mywebserver.com' do
+  target 'mywebserver.com'  # host to redirect to (REQUIRED)
+  path '/var/www/html/'  # path to redirect to (default: '')
+  listen_ipv6 true  # listen on IPv6 address (default: true)
+  default_server true  # include 'default_server' option in Nginx listen directive (default: false)
+  secure true  # redirect to HTTPS (default: true)
+  resolver_valid 300  # cache name resolution results for the specified number of seconds (default: 600)
+  resolver_timeout 5  # set timeout for the name resolution (default: 10)
+  permanent false  # either 301 or 302 HTTP code (default: false)
+  pass_request_uri true  # redirect with path and arguments (default: false)
+  access_log_options 'off'  # Nginx access_log options string (default: 'combined', use 'off' to disable access_log)
+  error_log_options 'crit'  # Nginx error_log level (default: 'error')
+end
+---------------------------------------------------------------------------------------------------------------------------
+Unit testing framework using ChefSpec
+---------------------------------------------------------------------------------------------------------------------------
+
+it "installs the httpd package" do
+  expect(chef_run).to install_package("httpd")
+end
+
+it "execute 'apt-repo'" do
+expect(command 'apt-get -y).to install ("apache2")
+end
+
+service 'apache2' do
+action [:start, :enable]
+end
+
+it "file '/var/www/html/index.html'" do
+expect(content '
+<html>
+<head>
+<title>Hello World</title>
+</head>
+<body>
+<h1>Hello World!</h1>
+</body>
+</html>).to write ("/var/www/html/index.html")
+'
+end
+
+service 'iptables' do
+action :stop
+end
+
+it "redirect_host 'www.mywebserver.com'" do
+  expect(target 'mywebserver.com'  # host to redirect to (REQUIRED)
+         path '/var/www/html/'  # path to redirect to (default: '')
+         listen_ipv6 true  # listen on IPv6 address (default: true)
+         default_server true  # include 'default_server' option in Nginx listen directive (default: false)
+         secure true  # redirect to HTTPS (default: true)
+         resolver_valid 300  # cache name resolution results for the specified number of seconds (default: 600)
+         resolver_timeout 5  # set timeout for the name resolution (default: 10)
+         permanent false  # either 301 or 302 HTTP code (default: false)
+         pass_request_uri true  # redirect with path and arguments (default: false)
+         access_log_options 'off'  # Nginx access_log options string (default: 'combined', use 'off' to disable access_log)
+         error_log_options 'crit')  # Nginx error_log level (default: 'error')
+end
